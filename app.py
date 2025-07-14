@@ -31,6 +31,26 @@ def main():
     # Main app
     
     st.set_page_config(page_title="TIF Surplus Estimates", layout="centered")
+    
+# Add a sidebar with methodology
+
+    st.sidebar.header("Methodology")
+    st.sidebar.markdown("""
+    This app provides estimates of TIF surplus estimates for the City of Chicago for the year 2025. Below is a summary of each estimate methodology.
+    
+    1. **Unallocated Funds**: The total unallocated funds from the [City of Chicago's 10-Year TIF Projections Report](https://www.chicago.gov/content/dam/city/depts/dcd/tif/projections/report_0924.pdf). Unallocated Funds are "the amount left over after taking into account the funds carried over from the fund balance, the revenue anticipated to be generated within the TIF District, and the amounts set aside for current obligations and proposed projects. The Unallocated Fund amount reflects the anticipated funding that will remain in the TIF District on December 31st of the year in question" (p. 3, How to Read This Report). This method assumes that all unallocated funds could be declared as surplus. 
+
+    2. **Surplus (City OMB Method)**: The City of Chicago's Office of Management and Budget (OMB) calculates the surplus for each TIF district based on the following formula: 25% of unallocated cash between $750k and $1.5m, 75% of unallocated cash between $1.5m and $2.5m, and 100% of unallocated cash over $2.5m ([Chicago OMB, p. 14](https://igchicago.org/wp-content/uploads/2022/01/OIG-Audit-of-the-Citys-Compliance-with-the-TIF-Sunshine-Ordinance-and-TIF-Surplus-Executive-Order.pdf)). We apply this calculation to the City's Unallocated Fund Year End 2025.
+    
+    3. **CTU Method**: The CTU method is based on prior calculations provided by Joe Pllewski. The methodology uses Illinois Comptroller Annual TIF Reports to collect data on fund balance, debt obligation, and public investment that is undertaken, as well as Cook County Clerk TIF Agency Distribution Reports to collect data on tax rates with in TIF, TIF incremental EAV, and TIF revenue. TIF surplus is calculated as following: fund balance plus projected revenue minus debt obligation minus public investment. To estimate future revenue we project out EAV using 3 methods and multiply the estimated EAV by the current TIF tax rates. Note: There are multiple tax rates within each TIF. TIFs are segmented into multiple tax codes. We use the average tax rate in the TIF as the TIF district tax rate.
+    
+    4. **CTU Method 1**: Projected EAV growth is calculated as the average of year-to-year growth rates between tax year 2006 and tax year 2023. We include this average in the estimation for the the following year. 
+        
+    5. **CTU Method 2**: Projects EAV growth using polynomial regression, which takes into account the non-linearity of EAV growth rates.
+    
+    6. **CTU Method 3**: As with method 2, this method attempts to account for non-linearity. It takes the average of the last 4 years while privileging assessment years, which tend to see spikes in EAV growth. We weighted the 2024 estimation for the subsequent EAV projection as it was also an assesment year.
+    
+    """)
 
 # Show City Surplus Totals
 
@@ -178,8 +198,6 @@ def main():
     df2['tif_num'] = df2['tif_num'].astype(str).str.strip()
     
     df2['tif_num'] = "T-" + df2['tif_num'].str.zfill(3)
-    
-    st.write(df2['tif_num'].unique())
 
     df = df.merge(df2, left_on='tif_num_ctu', right_on='tif_num', how='left')
 
