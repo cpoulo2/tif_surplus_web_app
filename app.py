@@ -1,6 +1,9 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import requests
+import geopandas as gpd
+from shapely.geometry import shape
 
 # Load data
 @st.cache_data
@@ -8,23 +11,24 @@ def load_data():
     """Load the TIF surplus data"""
     try:
         df = pd.read_csv(r"data.csv")
+        df2 = pd.read_csv(r"ward_data.csv")
         # Filter out expiration data for 2024
         df = df[df['expiration_date'].astype(str).str[-4:] != '2024']
-        return df
-    except FileNotFoundError:
-        st.error("Data file not found. Please ensure the CSV file is in the correct location.")
-        return None
-
+        return df, df2
+    except FileNotFoundError as e:
+        st.error(f"Data file not found: {e}. Please ensure the CSV files are in the correct location.")
+        return None, None
+    
+    
 
 def main():    
-# Load data
+    # Load data
+    df, df2 = load_data()
 
-    df = load_data()
-
-    if df is None:
+    if df is None or df2 is None:
         return
 
-# Main app
+    # Main app
     
     st.set_page_config(page_title="TIF Surplus Estimates", layout="centered")
 
@@ -79,7 +83,7 @@ def main():
 
 # Create a filter to select by TIF district default
 
-    tif_districts = df['tif_name_comptroller_report'].unique()
+    tif_districts = sorted(df['tif_name_comptroller_report'].unique())
     
     selected_district = st.selectbox("Select TIF District", tif_districts)
 
@@ -141,6 +145,8 @@ def main():
     
     # Rename columns for clarity
     top5.rename(columns={
+        'tif_name_comptroller_report': 'TIF District',
+        'expiration_date': 'Expiration Date',
         'unallocated_funds_2025': 'Unallocated Funds',
         'surplus_2025': 'Surplus (City OMB Method)',
         'full_surplus_avg_method_25': 'CTU Method 1',
@@ -159,8 +165,67 @@ def main():
         top5['CTU Method 2'] = top5['CTU Method 2'].apply(lambda x: f"${x:,.0f}")
         top5['CTU Method 3'] = top5['CTU Method 3'].apply(lambda x: f"${x:,.0f}")
         st.dataframe(top5,hide_index=True, use_container_width=True)
-        
 
+    st.header("TIF Surplus Estimates by Ward")
+# Create a filter to select by TIF district default
+
+    # Change the tif_num column in df2 to match the format in df
+    
+    df2 = df2.dropna(subset=['tif_num'])
+
+    df2['tif_num'] = df2['tif_num'].str[2:].astype(int)
+
+    df2['tif_num'] = df2['tif_num'].astype(str).str.strip()
+    
+    df2['tif_num'] = "T-" + df2['tif_num'].str.zfill(3)
+    
+    st.write(df2['tif_num'].unique())
+
+    df = df.merge(df2, left_on='tif_num_ctu', right_on='tif_num', how='left')
+
+    # Drop missing values in 'ward_id' column
+    df = df.dropna(subset=['ward_id'])
+    
+    wards = sorted(df['ward_id'].astype(int).unique())
+    
+    # Convert ward_id to int for better display
+    df['ward_id'] = df['ward_id'].astype(int)
+    
+    selected_wards = st.selectbox("Select a ward", wards)
+
+    filtered_df = df[(df['ward_id'] == selected_wards)]
+    
+    # Filter for needed columns
+    filter_cols = ['tif_name_comptroller_report', 'tif_coverage','expiration_date','unallocated_funds_2025', 
+                   'surplus_2025','full_surplus_avg_method_25','full_surplus_poly_method_25',
+                   'full_surplus_weighted_method_25']
+    
+    filtered_df = filtered_df[filter_cols]
+    
+    # Rename columns for clarity
+    filtered_df.rename(columns={
+        'tif_name_comptroller_report': 'TIF District',
+        'tif_coverage': 'TIF Coverage',
+        'expiration_date': 'Expiration Date',
+        'unallocated_funds_2025': 'Unallocated Funds',
+        'surplus_2025': 'Surplus (City OMB Method)',
+        'full_surplus_avg_method_25': 'CTU Method 1',
+        'full_surplus_poly_method_25': 'CTU Method 2',
+        'full_surplus_weighted_method_25': 'CTU Method 3'
+    }, inplace=True)
+    
+    # Center the table using columns - make it a bit wider
+    col1, col2, col3 = st.columns([.5, 20, .5])
+    with col2:
+        # Try a different approach - format numbers but keep them sortable
+        # Formate the unallocated funds, surplus, and CTU methods as currency
+        filtered_df['TIF Coverage'] = filtered_df['TIF Coverage'].apply(lambda x: f"{x:.0%}")
+        filtered_df['Unallocated Funds'] = filtered_df['Unallocated Funds'].apply(lambda x: f"${x:,.0f}")
+        filtered_df['Surplus (City OMB Method)'] = filtered_df['Surplus (City OMB Method)'].apply(lambda x: f"${x:,.0f}")
+        filtered_df['CTU Method 1'] = filtered_df['CTU Method 1'].apply(lambda x: f"${x:,.0f}")
+        filtered_df['CTU Method 2'] = filtered_df['CTU Method 2'].apply(lambda x: f"${x:,.0f}")
+        filtered_df['CTU Method 3'] = filtered_df['CTU Method 3'].apply(lambda x: f"${x:,.0f}")
+        st.dataframe(filtered_df,hide_index=True, use_container_width=True)
 # Download the data.csv file
 
     st.header("Download Data")
