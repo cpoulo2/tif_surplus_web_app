@@ -201,13 +201,6 @@ def main():
         # Get all the numeric columns for min/max calculation
         numeric_cols = ['Unallocated Funds', 'City Surplus Method', 'CTU Method 1', 'CTU Method 2', 'CTU Method 3']
         
-        # Calculate min and max total across all numeric columns (overall)
-        min_value = top5['CPS Min Surplus Revenue'].sum()
-        max_value = top5['CPS Max Surplus Revenue'].sum()
-        
-        st.subheader("CPS TIF surplus revenue estimates:")
-        st.write(f"Minimum: ${min_value:,.0f}")
-        st.write(f"Maximum: ${max_value:,.0f}")
         
         # Calculate min and max for each row (each TIF district)
         row_min = top5[numeric_cols].min(axis=1)
@@ -218,6 +211,14 @@ def main():
         top5['CPS Max Surplus Revenue'] = row_max * cps
         top5['Chicago Min Surplus Revenue'] = row_min * chi
         top5['Chicago Max Surplus Revenue'] = row_max * chi
+        
+        # Calculate min and max total across all numeric columns (overall)
+        min_value = top5['CPS Min Surplus Revenue'].sum()
+        max_value = top5['CPS Max Surplus Revenue'].sum()
+        
+        st.subheader("CPS TIF surplus revenue estimates:")
+        st.write(f"Minimum: ${min_value:,.0f}")
+        st.write(f"Maximum: ${max_value:,.0f}")
 
         # Try a different approach - format numbers but keep them sortable
         # Formate the unallocated funds, surplus, and CTU methods as currency
