@@ -347,7 +347,7 @@ def main():
     max_value = filtered_df['CPS Max Surplus Revenue'].sum().sum()
 
     st.subheader(f"CPS TIF surplus revenue estimates for ward {selected_wards} range from:")
-    st.write(f"\\${min_value:,.0f} to \\${max_value:,.0f}")
+    st.write(f"\\**${min_value:,.0f}** to \\${max_value:,.0f}")
 
     # Center the table using columns - make it a bit wider
     col1, col2, col3 = st.columns([.5, 20, .5])
