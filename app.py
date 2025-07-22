@@ -14,6 +14,8 @@ def load_data():
         df2 = pd.read_csv(r"ward_data.csv")
         # Filter out expiration data for 2024
         df = df[df['expiration_date'].astype(str).str[-4:] != '2024']
+        # Remove the Red Line Extension and Red Purple Modernization Plase One (Transit TIF)
+        df = df[~df['tif_name_comptroller_report'].isin(['Red Line Extension', 'Red Purple Modernization Phase One'])]
         return df, df2
     except FileNotFoundError as e:
         st.error(f"Data file not found: {e}. Please ensure the CSV files are in the correct location.")
@@ -38,7 +40,7 @@ def main():
     st.sidebar.markdown("""
     This app provides estimates of TIF surplus estimates for the City of Chicago for the year 2025. Below is a summary of each estimate methodology.
     
-    1. **Unallocated Funds**: The total unallocated funds from the [City of Chicago's 2024 10-Year TIF Projections Report](https://www.chicago.gov/content/dam/city/depts/dcd/tif/projections/report_0924.pdf). Unallocated Funds are "the amount left over after taking into account the funds carried over from the fund balance, the revenue anticipated to be generated within the TIF District, and the amounts set aside for current obligations and proposed projects. The Unallocated Fund amount reflects the anticipated funding that will remain in the TIF District on December 31st of the year in question" (p. 3, How to Read This Report). This method assumes that all unallocated funds could be declared as surplus. 
+    1. **Unallocated Funds**: The total unallocated funds from the [City of Chicago's 2024 10-Year TIF Projections Report](https://www.chicago.gov/content/dam/city/depts/dcd/tif/projections/report_0325.pdf). Unallocated Funds are "the amount left over after taking into account the funds carried over from the fund balance, the revenue anticipated to be generated within the TIF District, and the amounts set aside for current obligations and proposed projects. The Unallocated Fund amount reflects the anticipated funding that will remain in the TIF District on December 31st of the year in question" (p. 3, How to Read This Report). This method assumes that all unallocated funds could be declared as surplus. 
 
     2. **City Surplus Method**: The City of Chicago's Office of Management and Budget (OMB) calculates the surplus for each TIF district based on the following formula: 25% of unallocated cash between \\$750k and \\$1.5m, 75% of unallocated cash between \\$1.5m and \\$2.5m, and 100% of unallocated cash over \\$2.5m ([Chicago OMB, p. 14](https://igchicago.org/wp-content/uploads/2022/01/OIG-Audit-of-the-Citys-Compliance-with-the-TIF-Sunshine-Ordinance-and-TIF-Surplus-Executive-Order.pdf)). We apply this calculation to the City's Unallocated Fund Year End 2025.
     
