@@ -36,7 +36,7 @@ def main():
     
 # Add a sidebar with methodology
 
-    st.sidebar.header("Methodology TEST!")
+    st.sidebar.header("Methodology")
     st.sidebar.markdown("""
     This app provides estimates of TIF surplus estimates for the City of Chicago for the year 2025. Below is a summary of each estimate methodology.
     
