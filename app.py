@@ -67,7 +67,7 @@ def main():
     # Calculate portion alloted to CPS and City
     # First calculate % of total property tax rate (https://www.chicago.gov/content/dam/city/depts/fin/supp_info/CAFR/2024CAFR/ACFR_2024.pdf, pp. 234-5)
 
-    chi = 1.741/6.995
+    chi = 1.612/6.995
     cps = 3.829/6.995
 
     unallocated_tot_cps = unallocated_tot * cps
